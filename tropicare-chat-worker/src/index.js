@@ -58,7 +58,7 @@ IMPORTANT: Always include a brief medical disclaimer at the end (e.g., "TropiCar
                 headers: {
                     "Authorization": `Bearer ${env.OPENROUTER_API_KEY}`,
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "http://localhost:5173", // update for prod later
+                    "HTTP-Referer": "https://tropicare.daivanlabs.com",
                     "X-Title": "TropiCare AI Chat",
                 },
                 body: JSON.stringify({
