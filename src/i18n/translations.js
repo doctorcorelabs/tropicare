@@ -19,6 +19,9 @@ export const translations = {
             time: 'Waktu',
             optional: 'opsional',
             all: 'Semua',
+            login: 'Masuk / Daftar',
+            logout: 'Keluar',
+            profile: 'Profil Anda'
         },
         landing: {
             title: 'TropiCare',
@@ -251,6 +254,9 @@ export const translations = {
             time: 'Time',
             optional: 'optional',
             all: 'All',
+            login: 'Sign In / Sign Up',
+            logout: 'Sign Out',
+            profile: 'Your Profile'
         },
         landing: {
             title: 'TropiCare',

@@ -3,11 +3,12 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
     Activity, MessageCircle, Thermometer, Droplets,
     Map, FlaskConical, Building2, Menu, X, Heart,
-    Home, Shield
+    Home, Shield, LogIn, LogOut, User
 } from 'lucide-react';
 import './Layout.css';
 
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
     { path: '/', labelKey: 'nav.home', icon: Home },
@@ -23,6 +24,7 @@ export default function Layout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const location = useLocation();
     const { language, changeLanguage, t } = useLanguage();
+    const { user, signOut } = useAuth();
 
     return (
         <div className="layout">
@@ -97,6 +99,40 @@ export default function Layout() {
                         <span className="lang-sep">|</span>
                         <span className={`lang-opt ${language === 'en' ? 'active' : ''}`}>EN</span>
                     </button>
+
+                    <div className="auth-footer-controls" style={{ marginTop: 'var(--space-4)', padding: 'var(--space-4) 0', borderTop: '1px solid var(--color-border)' }}>
+                        {user ? (
+                            <div className="user-profile-widget">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                                    <div style={{ background: 'var(--color-primary-light)', padding: '4px', borderRadius: '50%', color: 'white' }}>
+                                        <User size={16} />
+                                    </div>
+                                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'bold' }} title={user.email}>
+                                        {user.user_metadata?.full_name?.split(' ')[0] || user.email.split('@')[0]}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => { signOut(); setSidebarOpen(false); }}
+                                    className="btn btn-ghost"
+                                    style={{ width: '100%', justifyContent: 'flex-start', padding: 'var(--space-2) var(--space-3)' }}
+                                >
+                                    <LogOut size={16} />
+                                    <span style={{ fontSize: 'var(--font-size-sm)' }}>{t('common.logout')}</span>
+                                </button>
+                            </div>
+                        ) : (
+                            <NavLink
+                                to="/auth"
+                                className="btn btn-primary"
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)' }}
+                                onClick={() => setSidebarOpen(false)}
+                            >
+                                <LogIn size={16} />
+                                {t('common.login')}
+                            </NavLink>
+                        )}
+                    </div>
+
                     <div className="sidebar-footer-card">
                         <Heart size={16} className="footer-heart" />
                         <p className="footer-text">

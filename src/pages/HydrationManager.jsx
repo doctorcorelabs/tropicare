@@ -5,6 +5,8 @@ import {
     calculateProgress, getHydrationStatus
 } from '../utils/hydrationCalc';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 import './HydrationManager.css';
 
 export default function HydrationManager() {
@@ -17,7 +19,42 @@ export default function HydrationManager() {
     const [showORS, setShowORS] = useState(false);
     const [reminder, setReminder] = useState(null);
     const reminderRef = useRef(null);
+    const { user } = useAuth();
 
+    function getIconForFluid(name) {
+        const option = FLUID_OPTIONS.find(f => f.id === name.toLowerCase());
+        return option ? option.icon : '💧';
+    }
+
+    // Fetch from Supabase
+    useEffect(() => {
+        async function loadIntakes() {
+            if (!user) return;
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const { data, error } = await supabase
+                    .from('hydration_logs')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('date', today);
+
+                if (error) throw error;
+                if (data) {
+                    const loaded = data.map(d => ({
+                        id: d.id,
+                        fluid: d.fluid_type,
+                        icon: getIconForFluid(d.fluid_type) || '💧',
+                        amount: d.amount_ml,
+                        time: new Date(`${d.date}T${d.time}`)
+                    }));
+                    setIntakes(loaded);
+                }
+            } catch (err) {
+                console.error('Error loading hydration:', err);
+            }
+        }
+        loadIntakes();
+    }, [user]);
 
     // Reminder timer
     useEffect(() => {
@@ -39,24 +76,54 @@ export default function HydrationManager() {
     const progress = calculateProgress(totalIntake, targetMl);
     const status = getHydrationStatus(progress, language);
 
-    function addIntake() {
+    async function addIntake() {
         const fluid = FLUID_OPTIONS.find(f => f.id === selectedFluid);
         const amount = customAmount ? parseInt(customAmount) : fluid.mlPerGlass;
         if (isNaN(amount) || amount <= 0) return;
 
-        setIntakes([
-            ...intakes,
-            {
-                fluid: t(fluid.labelKey),
-                icon: fluid.icon,
-                amount,
-                time: new Date(),
-            },
-        ]);
+        const newEntry = {
+            fluid: t(fluid.labelKey),
+            icon: fluid.icon,
+            amount,
+            time: new Date(),
+        };
+
+        if (user) {
+            try {
+                const date = newEntry.time.toISOString().split('T')[0];
+                const timeStr = newEntry.time.toTimeString().split(' ')[0];
+
+                const { data, error } = await supabase
+                    .from('hydration_logs')
+                    .insert([{
+                        user_id: user.id,
+                        fluid_type: fluid.id,
+                        amount_ml: amount,
+                        date,
+                        time: timeStr
+                    }])
+                    .select();
+
+                if (error) throw error;
+                if (data) newEntry.id = data[0].id; // Store db id for deletion
+            } catch (err) {
+                console.error("Error saving hydration:", err);
+            }
+        }
+
+        setIntakes([...intakes, newEntry]);
         setCustomAmount('');
     }
 
-    function removeIntake(index) {
+    async function removeIntake(index) {
+        const intake = intakes[index];
+        if (user && intake.id) {
+            try {
+                await supabase.from('hydration_logs').delete().eq('id', intake.id);
+            } catch (err) {
+                console.error("Error deleting hydration:", err);
+            }
+        }
         setIntakes(intakes.filter((_, i) => i !== index));
     }
 

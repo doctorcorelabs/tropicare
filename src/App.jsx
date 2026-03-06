@@ -8,24 +8,29 @@ import HydrationManager from './pages/HydrationManager';
 import DengueMap from './pages/DengueMap';
 import LabInterpreter from './pages/LabInterpreter';
 import HealthDirectory from './pages/HealthDirectory';
+import Auth from './pages/Auth';
 import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Landing />} />
-            <Route path="/symptom-checker" element={<SymptomChecker />} />
-            <Route path="/fever-tracker" element={<FeverTracker />} />
-            <Route path="/hydration" element={<HydrationManager />} />
-            <Route path="/dengue-map" element={<DengueMap />} />
-            <Route path="/lab-interpreter" element={<LabInterpreter />} />
-            <Route path="/directory" element={<HealthDirectory />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/symptom-checker" element={<SymptomChecker />} />
+              <Route path="/fever-tracker" element={<FeverTracker />} />
+              <Route path="/hydration" element={<HydrationManager />} />
+              <Route path="/dengue-map" element={<DengueMap />} />
+              <Route path="/lab-interpreter" element={<LabInterpreter />} />
+              <Route path="/directory" element={<HealthDirectory />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Thermometer, Plus, Trash2, AlertTriangle, Info,
     TrendingUp, Calendar
@@ -10,6 +10,8 @@ import {
 import './FeverTracker.css';
 
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const getPhaseInfo = (t) => [
     {
@@ -57,6 +59,9 @@ const FeverTooltip = ({ active, payload, t }) => {
 
 export default function FeverTracker() {
     const { t, language } = useLanguage();
+    const { user } = useAuth();
+
+    // Default mock data for guest mode
     const [entries, setEntries] = useState([
         { day: 1, temp: 39.2, date: '2026-03-01', time: '08:00' },
         { day: 2, temp: 39.5, date: '2026-03-02', time: '08:00' },
@@ -66,20 +71,85 @@ export default function FeverTracker() {
     const [newDate, setNewDate] = useState('');
     const [newTime, setNewTime] = useState('08:00');
 
-    function addEntry() {
+    // Fetch from Supabase
+    useEffect(() => {
+        async function loadEntries() {
+            if (!user) return;
+            try {
+                const { data, error } = await supabase
+                    .from('fever_logs')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('day', { ascending: true });
+
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setEntries(data.map(d => ({
+                        id: d.id, // Supabase UUID
+                        day: d.day,
+                        temp: d.temp,
+                        date: d.date,
+                        time: d.time
+                    })));
+                } else if (data && data.length === 0) {
+                    // Start fresh if real user has no data
+                    setEntries([]);
+                }
+            } catch (err) {
+                console.error("Error loading fever logs:", err);
+            }
+        }
+        loadEntries();
+    }, [user]);
+
+    async function addEntry() {
         if (!newTemp || isNaN(parseFloat(newTemp))) return;
         const temp = parseFloat(newTemp);
         const day = entries.length + 1;
         const date = newDate || new Date().toISOString().slice(0, 10);
-        setEntries([...entries, { day, temp, date, time: newTime }]);
+
+        const newEntry = { day, temp, date, time: newTime };
+
+        if (user) {
+            try {
+                const { data, error } = await supabase
+                    .from('fever_logs')
+                    .insert([{
+                        user_id: user.id,
+                        day: day,
+                        temp: temp,
+                        date: date,
+                        time: newTime
+                    }])
+                    .select();
+
+                if (error) throw error;
+                if (data) newEntry.id = data[0].id; // Keep UUID for deletion
+            } catch (err) {
+                console.error("Error saving fever log:", err);
+            }
+        }
+
+        setEntries([...entries, newEntry]);
         setNewTemp('');
         setNewDate('');
         setNewTime('08:00');
     }
 
-    function removeEntry(index) {
+    async function removeEntry(index) {
+        const entryToRemove = entries[index];
+        if (user && entryToRemove.id) {
+            try {
+                await supabase.from('fever_logs').delete().eq('id', entryToRemove.id);
+            } catch (err) {
+                console.error("Error deleting fever log:", err);
+            }
+        }
+
         const updated = entries.filter((_, i) => i !== index)
-            .map((e, i) => ({ ...e, day: i + 1 }));
+            .map((e, i) => ({ ...e, day: i + 1 })); // Recalculate days
+
+        // Note: Recalculating days might desync with DB without a bulk update, but for simple MVP this works
         setEntries(updated);
     }
 

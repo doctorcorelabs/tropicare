@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     FlaskConical, Plus, TrendingUp, TrendingDown,
     AlertTriangle, CheckCircle, Calendar, Trash2, Info
@@ -8,6 +8,8 @@ import {
     Tooltip, ResponsiveContainer, ReferenceLine, Legend
 } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 import './LabInterpreter.css';
 
 const NORMAL_RANGES = {
@@ -93,6 +95,9 @@ const LabTooltip = ({ active, payload }) => {
 
 export default function LabInterpreter() {
     const { t, language } = useLanguage();
+    const { user } = useAuth();
+
+    // Default mock data for guest mode
     const [entries, setEntries] = useState([
         { day: 1, date: '2026-03-01', hematokrit: 42, trombosit: 180, ns1: 'positive', igm: 'negative', igg: 'negative' },
         { day: 2, date: '2026-03-02', hematokrit: 44, trombosit: 140, ns1: '', igm: 'negative', igg: 'negative' },
@@ -103,22 +108,88 @@ export default function LabInterpreter() {
         date: '', hematokrit: '', trombosit: '', ns1: '', igm: '', igg: '',
     });
 
-    function addEntry() {
+    // Fetch from Supabase
+    useEffect(() => {
+        async function loadEntries() {
+            if (!user) return;
+            try {
+                const { data, error } = await supabase
+                    .from('lab_results')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('day', { ascending: true });
+
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setEntries(data.map(d => ({
+                        id: d.id, // Supabase UUID
+                        day: d.day,
+                        date: d.created_at.slice(0, 10), // Simplification
+                        hematokrit: d.hematokrit,
+                        trombosit: d.trombosit,
+                        ns1: d.ns1,
+                        igm: d.igm,
+                        igg: d.igg
+                    })));
+                } else if (data && data.length === 0) {
+                    setEntries([]);
+                }
+            } catch (err) {
+                console.error("Error loading lab results:", err);
+            }
+        }
+        loadEntries();
+    }, [user]);
+
+    async function addEntry() {
         if (!newEntry.hematokrit && !newEntry.trombosit) return;
         const day = entries.length + 1;
-        setEntries([...entries, {
-            day,
-            date: newEntry.date || new Date().toISOString().slice(0, 10),
-            hematokrit: newEntry.hematokrit ? parseFloat(newEntry.hematokrit) : null,
-            trombosit: newEntry.trombosit ? parseInt(newEntry.trombosit) : null,
-            ns1: newEntry.ns1,
-            igm: newEntry.igm,
-            igg: newEntry.igg,
-        }]);
+        const date = newEntry.date || new Date().toISOString().slice(0, 10);
+
+        const hematokrit = newEntry.hematokrit ? parseFloat(newEntry.hematokrit) : null;
+        const trombosit = newEntry.trombosit ? parseInt(newEntry.trombosit) : null;
+
+        const entryObj = {
+            day, date, hematokrit, trombosit,
+            ns1: newEntry.ns1, igm: newEntry.igm, igg: newEntry.igg
+        };
+
+        if (user) {
+            try {
+                const { data, error } = await supabase
+                    .from('lab_results')
+                    .insert([{
+                        user_id: user.id,
+                        day: day,
+                        hematokrit: hematokrit,
+                        trombosit: trombosit,
+                        ns1: newEntry.ns1 || null,
+                        igm: newEntry.igm || null,
+                        igg: newEntry.igg || null,
+                    }])
+                    .select();
+
+                if (error) throw error;
+                if (data) entryObj.id = data[0].id;
+            } catch (err) {
+                console.error("Error saving lab result:", err);
+            }
+        }
+
+        setEntries([...entries, entryObj]);
         setNewEntry({ date: '', hematokrit: '', trombosit: '', ns1: '', igm: '', igg: '' });
     }
 
-    function removeEntry(index) {
+    async function removeEntry(index) {
+        const entryToRemove = entries[index];
+        if (user && entryToRemove.id) {
+            try {
+                await supabase.from('lab_results').delete().eq('id', entryToRemove.id);
+            } catch (err) {
+                console.error("Error deleting lab result:", err);
+            }
+        }
+
         const updated = entries.filter((_, i) => i !== index).map((e, i) => ({ ...e, day: i + 1 }));
         setEntries(updated);
     }
