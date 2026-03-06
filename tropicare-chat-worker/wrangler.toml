@@ -1,0 +1,6 @@
+name = "tropicare-chat-worker"
+main = "src/index.js"
+compatibility_date = "2024-03-29"
+
+# Secret configured via 'wrangler secret put OPENROUTER_API_KEY'
+# OPENROUTER_API_KEY = "sk-or-v1-..."

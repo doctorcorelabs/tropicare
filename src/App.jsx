@@ -1,0 +1,31 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Landing from './pages/Landing';
+import SymptomChecker from './pages/SymptomChecker';
+import FeverTracker from './pages/FeverTracker';
+import HydrationManager from './pages/HydrationManager';
+import DengueMap from './pages/DengueMap';
+import LabInterpreter from './pages/LabInterpreter';
+import HealthDirectory from './pages/HealthDirectory';
+import { LanguageProvider } from './context/LanguageContext';
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Landing />} />
+            <Route path="/symptom-checker" element={<SymptomChecker />} />
+            <Route path="/fever-tracker" element={<FeverTracker />} />
+            <Route path="/hydration" element={<HydrationManager />} />
+            <Route path="/dengue-map" element={<DengueMap />} />
+            <Route path="/lab-interpreter" element={<LabInterpreter />} />
+            <Route path="/directory" element={<HealthDirectory />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </LanguageProvider>
+  );
+}

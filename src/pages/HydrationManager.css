@@ -1,0 +1,363 @@
+/* ============================================
+   Hydration Manager Page
+   ============================================ */
+
+.hydration-manager {
+    padding: var(--space-8);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.reminder-toast {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(2, 132, 199, 0.15));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-6);
+    color: var(--color-sky);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+}
+
+.hydration-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+}
+
+.hydration-left,
+.hydration-right {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+/* Calculator Card */
+.calc-card {
+    padding: var(--space-6);
+}
+
+.weight-slider-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.weight-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    outline: none;
+}
+
+.weight-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-sky);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.weight-display {
+    min-width: 60px;
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-align: center;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+    color: var(--color-sky);
+}
+
+.fluid-results {
+    margin-top: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.fluid-result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+}
+
+.fluid-result-item.highlight {
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.result-label {
+    color: var(--color-text-secondary);
+}
+
+.result-value {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+}
+
+.highlight .result-value {
+    color: var(--color-sky);
+}
+
+/* Progress Card */
+.progress-card {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+}
+
+.progress-ring-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+}
+
+.progress-ring {
+    width: 100%;
+    height: 100%;
+}
+
+.progress-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-percent {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-extrabold);
+}
+
+.progress-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+}
+
+.progress-stats {
+    display: flex;
+    gap: var(--space-8);
+    width: 100%;
+    justify-content: center;
+}
+
+.progress-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.progress-stat-value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+}
+
+.progress-stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+/* Intake Card */
+.intake-card {
+    padding: var(--space-5);
+}
+
+.fluid-type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.fluid-type-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-3);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    color: var(--color-text);
+}
+
+.fluid-type-btn:hover {
+    border-color: var(--color-sky);
+}
+
+.fluid-selected {
+    border-color: var(--color-sky);
+    background: rgba(56, 189, 248, 0.1);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+.fluid-emoji {
+    font-size: 1.5rem;
+}
+
+.fluid-name {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+.fluid-ml {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.intake-actions {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-end;
+}
+
+.intake-actions .form-field {
+    flex: 1;
+}
+
+/* Intake Log */
+.intake-log {
+    padding: var(--space-5);
+}
+
+.log-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-8);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.intake-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.intake-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.intake-emoji {
+    font-size: 1.25rem;
+}
+
+.intake-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.intake-name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.intake-time {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.intake-amount {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-sky);
+}
+
+/* ORS Card */
+.ors-card {
+    padding: var(--space-4) var(--space-5);
+}
+
+.ors-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--color-text);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-align: left;
+}
+
+.ors-content {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+.ors-steps {
+    padding-left: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.ors-steps li {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+.ors-note {
+    margin-top: var(--space-3);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    background: var(--color-bg-secondary);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hydration-manager {
+        padding: var(--space-4);
+    }
+
+    .hydration-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fluid-type-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .progress-stats {
+        gap: var(--space-4);
+    }
+}
