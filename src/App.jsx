@@ -8,6 +8,7 @@ import HydrationManager from './pages/HydrationManager';
 import DengueMap from './pages/DengueMap';
 import LabInterpreter from './pages/LabInterpreter';
 import HealthDirectory from './pages/HealthDirectory';
+import TropicareAI from './pages/TropicareAI';
 import Auth from './pages/Auth';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/dengue-map" element={<DengueMap />} />
               <Route path="/lab-interpreter" element={<LabInterpreter />} />
               <Route path="/directory" element={<HealthDirectory />} />
+              <Route path="/ai" element={<TropicareAI />} />
             </Route>
           </Routes>
         </BrowserRouter>

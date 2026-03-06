@@ -4,8 +4,8 @@ import { translations } from '../i18n/translations';
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-    // Default language is 'id' (Indonesian)
-    const [language, setLanguage] = useState('id');
+    // Default language is 'en' (English)
+    const [language, setLanguage] = useState('en');
 
     const changeLanguage = (lang) => {
         setLanguage(lang);

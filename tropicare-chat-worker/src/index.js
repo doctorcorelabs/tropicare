@@ -19,7 +19,7 @@ export default {
         }
 
         try {
-            const { messages, language, riskScore } = await request.json();
+            const { messages, language, riskScore, chatType = 'triage' } = await request.json();
 
             const sysPromptId = `Anda adalah "TropiCare AI", asisten medis virtual spesialis demam berdarah dengue (DBD) di Indonesia.
 Tujuan Anda adalah memberikan edukasi medis yang akurat namun mudah dipahami, memberikan panduan terkait fase demam, dan merekomendasikan layanan kesehatan jika ada warning signs.
@@ -33,7 +33,24 @@ Current patient severity (triage score): ${riskScore || 'Not filled'} (Higher me
 Use clear, EMPATHETIC, PROFESSIONAL, and CONCISE language.
 IMPORTANT: Always include a brief medical disclaimer at the end (e.g., "TropiCare is not a substitute for professional medical advice.").`;
 
-            const systemPrompt = language === 'en' ? sysPromptEn : sysPromptId;
+            const sysPromptGeneralId = `Anda adalah "TropiCare AI", Chatbot Medis berfokus pada penyakit tropis, terutama Demam Berdarah Dengue.
+Tujuan Anda adalah memberikan jawaban umum yang komprehensif terkait penyakit medis, pencegahan, dan informasi kesehatan tropis.
+Jawablah dengan sudut pandang medis yang konkret, luwes, dan fleksibel. 
+Gunakan bahasa EMPATIK, PROFESIONAL, dan RINGKAS.
+PENTING: Selalu tambahkan disclaimer medis secara singkat di akhir pesan (misal: "TropiCare bukan pengganti diagnosis resmi dari dokter, segera kunjungi fasilitas kesehatan jika Anda mengalami gejala darurat.").`;
+
+            const sysPromptGeneralEn = `You are "TropiCare AI", a Medical Chatbot focusing on tropical diseases, especially Dengue Fever.
+Your goal is to provide comprehensive general answers regarding medical diseases, prevention, and tropical health information.
+Answer from a concrete medical perspective, but remain flexible and conversational.
+Use clear, EMPATHETIC, PROFESSIONAL, and CONCISE language.
+IMPORTANT: Always include a brief medical disclaimer at the end (e.g., "TropiCare is not a substitute for professional medical advice, visit a health facility immediately for emergencies.").`;
+
+            let systemPrompt = '';
+            if (chatType === 'general') {
+                systemPrompt = language === 'en' ? sysPromptGeneralEn : sysPromptGeneralId;
+            } else {
+                systemPrompt = language === 'en' ? sysPromptEn : sysPromptId;
+            }
 
             // Send request to OpenRouter
             const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {

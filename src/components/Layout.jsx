@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
     Activity, MessageCircle, Thermometer, Droplets,
     Map, FlaskConical, Building2, Menu, X, Heart,
-    Home, Shield, LogIn, LogOut, User
+    Home, Shield, LogIn, LogOut, User, Bot
 } from 'lucide-react';
 import './Layout.css';
 
@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 
 const navItems = [
     { path: '/', labelKey: 'nav.home', icon: Home },
+    { path: '/ai', labelKey: 'nav.ai', icon: Bot },
     { path: '/symptom-checker', labelKey: 'nav.symptom', icon: MessageCircle },
     { path: '/fever-tracker', labelKey: 'nav.fever', icon: Thermometer },
     { path: '/hydration', labelKey: 'nav.hydration', icon: Droplets },

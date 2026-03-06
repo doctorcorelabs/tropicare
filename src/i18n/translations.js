@@ -7,7 +7,8 @@ export const translations = {
             hydration: 'Hidrasi',
             map: 'Peta Dengue',
             lab: 'Hasil Lab',
-            directory: 'Direktori Faskes'
+            directory: 'Direktori Faskes',
+            ai: 'Tropicare AI'
         },
         common: {
             developedBy: 'Dibuat untuk membantu deteksi dini dan penanganan DBD di Indonesia',
@@ -232,6 +233,14 @@ export const translations = {
             beds: 'Kamar Tersedia',
             platelet: 'Unit Trombosit',
             blood: 'Unit Darah'
+        },
+        tropicareAi: {
+            title: 'Tropicare AI — Asisten Medis Tropis',
+            subtitle: 'Ajukan pertanyaan medis umum mengenai DBD dan penyakit tropis lainnya.',
+            welcome: 'Halo! Saya Tropicare AI. Apa yang ingin Anda ketahui tentang kesehatan tropis hari ini?',
+            inputPlaceholder: 'Tanyakan sesuatu tentang penyakit tropis...',
+            typing: 'Tropicare AI sedang mengetik...',
+            send: 'Kirim'
         }
     },
     en: {
@@ -242,7 +251,8 @@ export const translations = {
             hydration: 'Hydration',
             map: 'Dengue Map',
             lab: 'Lab Results',
-            directory: 'Health Directory'
+            directory: 'Health Directory',
+            ai: 'Tropicare AI'
         },
         common: {
             developedBy: 'Built to assist early detection and management of Dengue (DBD) in Indonesia',
@@ -467,6 +477,14 @@ export const translations = {
             beds: 'Beds Available',
             platelet: 'Platelet Units',
             blood: 'Blood Units'
+        },
+        tropicareAi: {
+            title: 'Tropicare AI — Tropical Medical Assistant',
+            subtitle: 'Ask general medical questions about Dengue and other tropical diseases.',
+            welcome: 'Hello! I am Tropicare AI. What would you like to know about tropical health today?',
+            inputPlaceholder: 'Ask something about tropical diseases...',
+            typing: 'Tropicare AI is typing...',
+            send: 'Send'
         }
     }
 };
