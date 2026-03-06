@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, Send, AlertTriangle, CheckCircle, Bot, User, RotateCcw } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { SYMPTOMS, FEVER_DURATION_OPTIONS, calculateTriageScore, getTriageResult } from '../utils/dengueTriage';
 import { useLanguage } from '../context/LanguageContext';
 import { sendMessageToAI } from '../services/aiService';
@@ -32,12 +33,7 @@ export default function SymptomChecker() {
     }, []);
 
     useEffect(() => {
-        // Initial greeting
-        addBotMessage(
-            'symptom.welcome',
-            500,
-            true
-        );
+        addBotMessage('symptom.welcome', 500, true);
         setTimeout(() => {
             setStep('fever');
         }, 1200);
@@ -49,13 +45,7 @@ export default function SymptomChecker() {
             ...prev,
             { sender: 'user', text: duration.labelKey, time: new Date(), isKey: true },
         ]);
-
-        addBotMessage(
-            'symptom.symptomsAsk',
-            500,
-            true
-        );
-
+        addBotMessage('symptom.symptomsAsk', 500, true);
         setTimeout(() => {
             setStep('symptoms');
         }, 800);
@@ -75,15 +65,18 @@ export default function SymptomChecker() {
 
         setMessages(prev => [
             ...prev,
-            { sender: 'user', text: selectedLabels.join(', '), time: new Date(), isKey: false },
+            { sender: 'user', text: selectedLabels.join(', ') || t('symptom.noSymptom'), time: new Date(), isKey: false },
         ]);
 
         const { score, hasWarningSign, hasDangerSign } = calculateTriageScore(selectedSymptoms, feverDuration);
         const triageResult = getTriageResult(score, hasWarningSign, hasDangerSign, language);
         setResult(triageResult);
 
+        // Summary message to the chat — brief so the pinned result card is the main focus
         addBotMessage(
-            `📊 **${language === 'en' ? 'Analysis Result' : 'Hasil Analisis'}**\n\n${language === 'en' ? 'Risk Score' : 'Skor Risiko'}: **${score}**\n\n${triageResult.title}\n\n${triageResult.description}`,
+            language === 'en'
+                ? `Analysis complete. Your risk score is **${score}**.\n\n${triageResult.title}\n\nYou can ask follow-up questions below.`
+                : `Analisis selesai. Skor risiko Anda: **${score}**.\n\n${triageResult.title}\n\nAnda bisa bertanya lebih lanjut di bawah.`,
             500
         );
 
@@ -93,18 +86,11 @@ export default function SymptomChecker() {
 
         setTimeout(() => {
             setStep('result');
-            addBotMessage(
-                language === 'en'
-                    ? "Do you have any other questions about Dengue or your symptoms? You can ask me here."
-                    : "Apakah ada hal lain yang ingin Anda tanyakan terkait DBD atau gejala Anda? Silakan tanya di sini.",
-                1500,
-                false
-            );
         }, 800);
     }
 
     async function handleSendChat() {
-        if (!chatInput.trim()) return;
+        if (!chatInput.trim() || isTyping) return;
 
         const userText = chatInput;
         setChatInput('');
@@ -117,12 +103,17 @@ export default function SymptomChecker() {
         try {
             const riskScoreStr = result?.level || 'Unknown';
             const aiReply = await sendMessageToAI(updatedContext, language, riskScoreStr);
-
             setMessages(prev => [...prev, { sender: 'bot', text: aiReply, time: new Date(), isKey: false }]);
             setAiContext(prev => [...prev, { role: "assistant", content: aiReply }]);
         } catch (error) {
             console.error("Chat Integration Error:", error);
-            setMessages(prev => [...prev, { sender: 'bot', text: language === 'en' ? "Sorry, I am having trouble connecting to the backend. Please try again." : "Maaf, saya tidak dapat terhubung ke server saat ini. Silakan coba lagi.", time: new Date(), isKey: false }]);
+            setMessages(prev => [...prev, {
+                sender: 'bot',
+                text: language === 'en'
+                    ? "Sorry, I am having trouble connecting to the backend. Please try again."
+                    : "Maaf, saya tidak dapat terhubung ke server saat ini. Silakan coba lagi.",
+                time: new Date(), isKey: false
+            }]);
         } finally {
             setIsTyping(false);
         }
@@ -136,21 +127,10 @@ export default function SymptomChecker() {
         setResult(null);
         setAiContext([]);
         setChatInput('');
-
         setTimeout(() => {
-            addBotMessage(
-                'symptom.welcome',
-                300,
-                true
-            );
+            addBotMessage('symptom.welcome', 300, true);
             setTimeout(() => setStep('fever'), 800);
         }, 200);
-    }
-
-    function renderMarkdown(text) {
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\n/g, '<br/>');
     }
 
     return (
@@ -166,43 +146,84 @@ export default function SymptomChecker() {
                 </div>
             </div>
 
-            {/* Chat Container */}
-            <div className="chat-container card-static">
-                {/* Messages */}
-                <div className="chat-messages">
-                    {messages.map((msg, i) => (
-                        <div key={i} className={`chat-bubble ${msg.sender === 'bot' ? 'bot-bubble' : 'user-bubble'} animate-fadeInUp`}>
-                            <div className="bubble-avatar">
-                                {msg.sender === 'bot' ? <Bot size={18} /> : <User size={18} />}
+            {/* Main layout: result card on left (when available), chat on right */}
+            <div className={`sc-layout ${step === 'result' ? 'sc-layout--result' : ''}`}>
+
+                {/* Result Summary Card — sticky left panel shown after analysis */}
+                {step === 'result' && result && (
+                    <div className="sc-result-panel animate-fadeInUp">
+                        <div
+                            className="result-card"
+                            style={{ borderColor: result.color, boxShadow: `0 0 20px ${result.color}33` }}
+                        >
+                            <div className="result-header" style={{ color: result.color }}>
+                                <AlertTriangle size={22} />
+                                <span className="result-level">{result.level}</span>
                             </div>
-                            <div className="bubble-content">
-                                <div
-                                    className="bubble-text"
-                                    dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.isKey ? t(msg.text) : msg.text) }}
-                                />
-                                <div className="bubble-time">
-                                    {msg.time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                                </div>
+                            <h3 className="result-title">{result.title}</h3>
+                            <p className="result-desc">{result.description}</p>
+
+                            <div className="result-actions">
+                                <h4>{language === 'en' ? 'Suggested Actions:' : 'Langkah yang Disarankan:'}</h4>
+                                <ul>
+                                    {result.actions.map((action, i) => (
+                                        <li key={i}>{action}</li>
+                                    ))}
+                                </ul>
                             </div>
                         </div>
-                    ))}
 
-                    {isTyping && (
-                        <div className="chat-bubble bot-bubble animate-fadeInUp">
-                            <div className="bubble-avatar">
-                                <Bot size={18} />
-                            </div>
-                            <div className="bubble-content">
-                                <div className="typing-indicator">
-                                    <span></span><span></span><span></span>
+                        <button className="btn btn-secondary btn-lg reset-btn" onClick={handleReset} id="reset-checker">
+                            <RotateCcw size={16} />
+                            {t('symptom.reset')}
+                        </button>
+                    </div>
+                )}
+
+                {/* Chat Panel */}
+                <div className="chat-container card-static">
+                    {/* Scrollable Messages */}
+                    <div className="chat-messages">
+                        {messages.map((msg, i) => (
+                            <div
+                                key={i}
+                                className={`chat-bubble ${msg.sender === 'bot' ? 'bot-bubble' : 'user-bubble'} animate-fadeInUp`}
+                            >
+                                <div className="bubble-avatar">
+                                    {msg.sender === 'bot' ? <Bot size={16} /> : <User size={16} />}
+                                </div>
+                                <div className="bubble-content">
+                                    {msg.isKey ? (
+                                        <div className="bubble-text">{t(msg.text)}</div>
+                                    ) : (
+                                        <div className="bubble-text">
+                                            <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                        </div>
+                                    )}
+                                    <div className="bubble-time">
+                                        {msg.time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        ))}
 
-                    {/* Interactive Input Areas */}
+                        {isTyping && (
+                            <div className="chat-bubble bot-bubble animate-fadeInUp">
+                                <div className="bubble-avatar"><Bot size={16} /></div>
+                                <div className="bubble-content">
+                                    <div className="typing-indicator">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Interactive Input Area — rendered BELOW the scroll, not inside it */}
                     {step === 'fever' && (
-                        <div className="chat-input-area animate-fadeInUp">
+                        <div className="chat-interactive-area animate-fadeInUp">
                             <p className="input-area-label">{t('symptom.duration')}</p>
                             <div className="fever-options">
                                 {FEVER_DURATION_OPTIONS.map((opt) => (
@@ -220,7 +241,7 @@ export default function SymptomChecker() {
                     )}
 
                     {step === 'symptoms' && (
-                        <div className="chat-input-area animate-fadeInUp">
+                        <div className="chat-interactive-area animate-fadeInUp">
                             <p className="input-area-label">{t('symptom.symptomsAsk')}</p>
                             <div className="symptoms-grid">
                                 {SYMPTOMS.map((symptom) => (
@@ -231,11 +252,11 @@ export default function SymptomChecker() {
                                         id={`symptom-${symptom.id}`}
                                     >
                                         <div className="symptom-check">
-                                            {selectedSymptoms.includes(symptom.id) && <CheckCircle size={16} />}
+                                            {selectedSymptoms.includes(symptom.id) && <CheckCircle size={14} />}
                                         </div>
                                         <span>{t(symptom.labelKey)}</span>
-                                        {symptom.category === 'warning' && <AlertTriangle size={14} className="symptom-warn-icon" />}
-                                        {symptom.category === 'danger' && <AlertTriangle size={14} className="symptom-danger-icon" />}
+                                        {symptom.category === 'warning' && <AlertTriangle size={13} className="symptom-warn-icon" />}
+                                        {symptom.category === 'danger' && <AlertTriangle size={13} className="symptom-danger-icon" />}
                                     </button>
                                 ))}
                             </div>
@@ -245,62 +266,33 @@ export default function SymptomChecker() {
                                 disabled={selectedSymptoms.length === 0}
                                 id="analyze-symptoms"
                             >
-                                <Send size={18} />
+                                <Send size={16} />
                                 {t('symptom.checkRisk')} ({selectedSymptoms.length})
                             </button>
                         </div>
                     )}
 
-                    {step === 'result' && result && (
-                        <div className="result-area animate-fadeInUp">
-                            <div
-                                className="result-card"
-                                style={{ borderColor: result.color, boxShadow: `0 0 20px ${result.color}33` }}
+                    {/* Follow-up Chat Input — sticky at bottom after result */}
+                    {step === 'result' && (
+                        <div className="chat-followup-input">
+                            <input
+                                type="text"
+                                placeholder={language === 'en' ? 'Ask a follow-up question...' : 'Tanya lebih lanjut...'}
+                                value={chatInput}
+                                onChange={(e) => setChatInput(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
+                                disabled={isTyping}
+                                autoComplete="off"
+                            />
+                            <button
+                                className="send-btn"
+                                onClick={handleSendChat}
+                                disabled={!chatInput.trim() || isTyping}
                             >
-                                <div className="result-header" style={{ color: result.color }}>
-                                    <AlertTriangle size={24} />
-                                    <span className="result-level">{result.level}</span>
-                                </div>
-                                <h3 className="result-title">{result.title}</h3>
-                                <p className="result-desc">{result.description}</p>
-
-                                <div className="result-actions">
-                                    <h4>{language === 'en' ? 'Suggested Actions:' : 'Langkah yang Disarankan:'}</h4>
-                                    <ul>
-                                        {result.actions.map((action, i) => (
-                                            <li key={i}>{action}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div className="ai-chat-input-area">
-                                <input
-                                    type="text"
-                                    className="input ai-chat-input"
-                                    placeholder={language === 'en' ? 'Type your message...' : 'Ketik pertanyaan Anda...'}
-                                    value={chatInput}
-                                    onChange={(e) => setChatInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
-                                    disabled={isTyping}
-                                />
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={handleSendChat}
-                                    disabled={!chatInput.trim() || isTyping}
-                                >
-                                    <Send size={18} />
-                                </button>
-                            </div>
-
-                            <button className="btn btn-secondary btn-lg reset-btn" onClick={handleReset} id="reset-checker" style={{ marginTop: '1rem' }}>
-                                <RotateCcw size={18} />
-                                {t('symptom.reset')}
+                                <Send size={17} />
                             </button>
                         </div>
                     )}
-
-                    <div ref={messagesEndRef} />
                 </div>
             </div>
         </div>
