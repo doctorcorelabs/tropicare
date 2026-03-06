@@ -89,7 +89,7 @@ export default function TropicareAI() {
                     ))}
 
                     {isTyping && (
-                        <div className="chat-bubble-wrapper assistant">
+                        <div className="chat-bubble-wrapper assistant typing-bubble">
                             <div className="bot-avatar"><Sparkles size={16} color="white" /></div>
                             <div className="chat-bubble typing-indicator">
                                 <span></span><span></span><span></span>
@@ -107,7 +107,7 @@ export default function TropicareAI() {
                         onChange={(e) => setChatInput(e.target.value)}
                         disabled={isTyping}
                     />
-                    <button type="submit" className="btn btn-primary" disabled={isTyping || !chatInput.trim()}>
+                    <button type="submit" className="btn-send" disabled={isTyping || !chatInput.trim()}>
                         <Send size={18} />
                     </button>
                 </form>
